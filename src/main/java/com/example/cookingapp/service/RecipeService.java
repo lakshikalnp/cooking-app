@@ -3,13 +3,16 @@ package com.example.cookingapp.service;
 
 import com.example.cookingapp.ai.ChatGPTClient;
 import com.example.cookingapp.dto.RecipeDto;
+import com.example.cookingapp.dto.response.RecipeLogDto;
 import com.example.cookingapp.entity.Ingredient;
 import com.example.cookingapp.entity.Recipe;
 import com.example.cookingapp.entity.RecipeLog;
+import com.example.cookingapp.mapper.RecipeLogMapper;
 import com.example.cookingapp.mapper.RecipeMapper;
 import com.example.cookingapp.repository.RecipeLogRepository;
 import com.example.cookingapp.repository.RecipeRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,23 +25,15 @@ import static com.example.cookingapp.util.Constant.PROMPT_STRING;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RecipeService {
 
     private final RecipeLogRepository repository;
     private final RecipeRepository recipeRepository;
     private final ChatGPTClient chatGPTClient;
     private final RecipeMapper recipeMapper;
+    private final RecipeLogMapper recipeLogMapper;
 
-    @Autowired
-    public RecipeService(RecipeLogRepository repository,
-                         ChatGPTClient chatGPTClient,
-                         RecipeRepository recipeRepository,
-                         RecipeMapper recipeMapper) {
-        this.repository = repository;
-        this.chatGPTClient = chatGPTClient;
-        this.recipeRepository = recipeRepository;
-        this.recipeMapper = recipeMapper;
-    }
 
     @Transactional
     public RecipeDto generateRecipe(int people, String prompt) throws Exception {
@@ -83,8 +78,16 @@ public class RecipeService {
     }
 
 
-    public List<RecipeLog> getAllLogs() {
-        return repository.findAll();
+
+    public List<RecipeLogDto> getAllLogs() {
+        return repository.findAll()
+                .stream()
+                .map(recipeLogMapper::toDto)
+                .toList();
+    }
+
+    public RecipeDto getRecipe(UUID id) {
+        return recipeMapper.toDto(recipeRepository.findById(id).orElse(null));
     }
 
 
