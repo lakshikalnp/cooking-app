@@ -15,6 +15,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -77,13 +79,9 @@ public class RecipeService {
         return recipeMapper.toDto(recipeLog.getRecipe());
     }
 
-
-
-    public List<RecipeLogDto> getAllLogs() {
-        return repository.findAll()
-                .stream()
-                .map(recipeLogMapper::toDto)
-                .toList();
+    public Page<RecipeLogDto> getAllLogs(Pageable pageable) {
+        return  repository.findAll(pageable)
+                .map(recipeLogMapper::toDto);
     }
 
     public RecipeDto getRecipe(UUID id) {

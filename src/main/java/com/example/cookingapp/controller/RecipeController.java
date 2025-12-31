@@ -9,6 +9,10 @@ import com.example.cookingapp.service.RecipeService;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,9 +37,18 @@ public class RecipeController {
     }
 
     @GetMapping
-    public List <RecipeLogDto> getRecipes () throws Exception {
-        log.info("getRecipes - {}", "None");
-        return recipeService.getAllLogs();
+    public Page<RecipeLogDto> getRecipes (@RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size,
+                                          @RequestParam(defaultValue = "createdAt,desc") String[] sort) throws Exception {
+        log.info("getRecipes - page {},size {}, sort {}", page, size, sort);
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Order.desc(sort[0].split(",")[0])
+                )
+        );
+        return recipeService.getAllLogs(pageable);
     }
 
     @GetMapping(value = "/{id}")
