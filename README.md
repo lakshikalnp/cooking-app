@@ -28,7 +28,6 @@ A Spring Boot application that generates cooking recipes using AI, stores recipe
 - MapStruct
 - OpenAI API
 - Maven
-
 ---
 
 ## 📡 REST APIs
