@@ -29,7 +29,6 @@ A Spring Boot application that generates cooking recipes using AI, stores recipe
 - OpenAI API
 - Maven
 
-
 ---
 
 ## 📡 REST APIs
