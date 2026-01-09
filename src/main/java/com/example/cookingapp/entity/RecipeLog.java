@@ -30,7 +30,11 @@ public class RecipeLog {
     @Column(length = 1000)
     private String prompt;
 
+    @Column(nullable = false)
     private int requestedPeople;
+
+    @Column(nullable = false)
+    private int noOfGramsOnePersonEats;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

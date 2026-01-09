@@ -4,6 +4,7 @@ import com.example.cookingapp.entity.RecipeLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,7 @@ public interface RecipeLogRepository extends JpaRepository<RecipeLog, UUID> {
             String prompt,
             Integer requestedPeople
     );
+
+    List<RecipeLog> findAllByPromptAndRequestedPeople(String prompt, int people);
+    List<RecipeLog> findAllByPromptAndRequestedPeopleAndNoOfGramsOnePersonEats(String prompt, int people, int noOfGramsOnePersonEats);
 }

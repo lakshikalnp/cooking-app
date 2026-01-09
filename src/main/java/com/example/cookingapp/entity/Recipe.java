@@ -32,6 +32,9 @@ public class Recipe {
     @Column(nullable = false)
     private int serves;
 
+    @Column(nullable = false)
+    private int noOfGramsOnePersonEats;
+
     @OneToMany(
             mappedBy = "recipe",
             cascade = CascadeType.ALL,

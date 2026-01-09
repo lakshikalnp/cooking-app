@@ -22,8 +22,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.cookingapp.util.Constant.PROMPT_STRING;
+import static com.example.cookingapp.util.Constant.PROMPT_STRING_WITH_CUSTOMIZED;
 
 @Slf4j
 @Service
@@ -38,19 +40,23 @@ public class RecipeService {
 
 
     @Transactional
-    public RecipeDto generateRecipe(int people, String prompt) throws Exception {
-        RecipeLog recipeLog = repository
-                .findByPromptAndRequestedPeople(prompt, people)
-                .orElse(null);
+    public List<RecipeDto> generateRecipe(int people, String prompt, Integer noOfGramsOnePersonEats, boolean isCustomized) throws Exception {
+        List<RecipeLog> recipeLog = new ArrayList<>();
+        if (!isCustomized)
+            recipeLog = repository
+                    .findAllByPromptAndRequestedPeople(prompt, people);
+        else recipeLog = repository
+                .findAllByPromptAndRequestedPeopleAndNoOfGramsOnePersonEats(prompt, people, noOfGramsOnePersonEats);
 
-        if (recipeLog == null) {
-
-            RecipeDto recipeDto =
-                    chatGPTClient.getRecipeForPeople(people, prompt);
+        if (recipeLog == null || recipeLog.isEmpty()) {
+            RecipeDto recipeDto = null;
+            recipeDto =
+                    chatGPTClient.getRecipeForPeople(people, prompt, noOfGramsOnePersonEats, isCustomized);
 
             Recipe recipe = new Recipe();
             recipe.setRecipeName(recipeDto.getRecipeName());
             recipe.setServes(recipeDto.getServes());
+            recipe.setNoOfGramsOnePersonEats(recipeDto.getNoOfGramsOnePersonEats());
             recipe.setInstructions(recipeDto.getInstructions());
 
             Recipe finalRecipe = recipe;
@@ -69,14 +75,17 @@ public class RecipeService {
             logEntity.setRecipeName(recipe.getRecipeName());
             logEntity.setPrompt(prompt);
             logEntity.setRequestedPeople(people);
+            logEntity.setNoOfGramsOnePersonEats(recipe.getNoOfGramsOnePersonEats());
             recipe.setRecipeLog(logEntity);
             recipe = recipeRepository.save(recipe); //  save parent first
 
-            return recipeDto;
+            return List.of(recipeDto);
         }
 
         // Existing log → fetch recipe safely
-        return recipeMapper.toDto(recipeLog.getRecipe());
+        return recipeLog.stream()
+                .map(r -> recipeMapper.toDto(r.getRecipe()))
+                .collect(Collectors.toList());
     }
 
     public Page<RecipeLogDto> getAllLogs(Pageable pageable) {
@@ -92,5 +101,10 @@ public class RecipeService {
     private String buildPrompt(int people, String prompt) {
         return PROMPT_STRING
                 .formatted(prompt, people);
+    }
+
+    private String buildPrompt(int people, String prompt, int noOfGramsOnePersonEats) {
+        return PROMPT_STRING_WITH_CUSTOMIZED
+                .formatted(prompt, people, noOfGramsOnePersonEats);
     }
 }

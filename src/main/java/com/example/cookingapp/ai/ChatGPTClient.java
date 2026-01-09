@@ -4,19 +4,15 @@ import com.example.cookingapp.dto.RecipeDto;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
-import com.openai.client.OpenAIClientImpl;
-import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.ResponseOutputText;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 import static com.example.cookingapp.util.Constant.PROMPT_STRING;
+import static com.example.cookingapp.util.Constant.PROMPT_STRING_WITH_CUSTOMIZED;
 
 @Service
 public class ChatGPTClient {
@@ -31,9 +27,12 @@ public class ChatGPTClient {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    public RecipeDto getRecipeForPeople(int people, String promptSuggestion) throws Exception {
-
-        String prompt = PROMPT_STRING
+    public RecipeDto getRecipeForPeople(int people, String promptSuggestion, Integer noOfGramsOnePersonEats, boolean isCustomized) throws Exception {
+        String  prompt = "";
+        if (isCustomized)
+            prompt = PROMPT_STRING_WITH_CUSTOMIZED
+                .formatted(promptSuggestion, people, noOfGramsOnePersonEats);
+        else prompt = PROMPT_STRING
                 .formatted(promptSuggestion, people);
 
         ResponseCreateParams params = ResponseCreateParams.builder()

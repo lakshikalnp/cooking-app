@@ -15,6 +15,7 @@ public class RecipeDto {
 
     private String recipeName;
     private int serves;
+    private int noOfGramsOnePersonEats;
     private List<IngredientDto> ingredients;
     private List<String> instructions;
 }

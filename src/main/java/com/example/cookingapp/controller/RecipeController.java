@@ -7,6 +7,7 @@ import com.example.cookingapp.dto.response.RecipeLogDto;
 import com.example.cookingapp.entity.RecipeLog;
 import com.example.cookingapp.service.RecipeService;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,9 +32,10 @@ public class RecipeController {
     }
 
     @PostMapping
-    public RecipeDto generateRecipe (@RequestBody RequestDto requestDto) throws Exception {
+    public List<RecipeDto> generateRecipe (@Valid @RequestBody RequestDto requestDto) throws Exception {
         log.info("generateRecipe - {}", requestDto);
-        return recipeService.generateRecipe(requestDto.getPeople(),requestDto.getPrompt());
+        return recipeService.generateRecipe(requestDto.getPeople(),requestDto.getPrompt(),
+                requestDto.getNoOfGramsOnePersonEats(), requestDto.getIsCustomized());
     }
 
     @GetMapping
