@@ -26,7 +26,7 @@ public class Recipe {
     @Column(length = 36)
     private UUID id;
 
-    @Column(name = "recipe_name", nullable = false, unique = true)
+    @Column(name = "recipe_name", nullable = false)
     private String recipeName;
 
     @Column(nullable = false)
