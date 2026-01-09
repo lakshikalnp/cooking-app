@@ -7,12 +7,13 @@ A Spring Boot application that generates cooking recipes using AI, stores recipe
 ## 🚀 Features
 
 - AI-powered recipe generation
-- Prompt + number of people based recipes
+- Recipes based on prompt + number of people
 - Persistent storage of recipes and ingredients
 - One-to-one recipe logging
 - Pagination support for logs
 - UUID-based primary keys
 - Clean JPA entity mappings
+- Conditional customization with `isCustomized` and `noOfGramsOnePersonEats`
 
 ---
 
@@ -32,42 +33,39 @@ A Spring Boot application that generates cooking recipes using AI, stores recipe
 
 ## 📡 REST APIs
 
-### Generate Recipe
-# Cooking App API
-
-This project is a Cooking App API that allows generating recipes based on user input, retrieving all recipe logs with pagination, and fetching specific recipes by ID.
-
-## Base URL
-
-`/V1/recipes`
-
-## Endpoints
+### Base URL
+```
+/V1/recipes
+```
 
 ### 1. Generate Recipe
 
 **POST /**
 
-**Description:** Generates a recipe based on the number of people and a prompt provided.
+**Description:** Generates a recipe based on the number of people, a prompt, and optional customization.
 
 **Request Body:**
-
 ```json
 {
   "people": 4,
-  "prompt": "Chicken curry with rice"
+  "prompt": "Chicken curry with rice",
+  "isCustomized": true,
+  "noOfGramsOnePersonEats": 100
 }
 ```
 
 **Response:**
-
 ```json
 {
   "id": "uuid",
   "recipeName": "Chicken Curry",
   "ingredients": [...],
-  "instructions": "..."
+  "instructions": "...",
+  "noOfGramsOnePersonEats": 100
 }
 ```
+
+---
 
 ### 2. Get All Recipes
 
@@ -76,13 +74,11 @@ This project is a Cooking App API that allows generating recipes based on user i
 **Description:** Retrieves all recipe logs with pagination.
 
 **Query Parameters:**
-
-* `page` (default: 0) - Page number
-* `size` (default: 10) - Number of items per page
-* `sort` (default: createdAt,desc) - Sorting order
+- `page` (default: 0) - Page number
+- `size` (default: 10) - Number of items per page
+- `sort` (default: createdAt,desc) - Sorting order
 
 **Response:**
-
 ```json
 {
   "content": [
@@ -91,6 +87,7 @@ This project is a Cooking App API that allows generating recipes based on user i
       "recipeName": "Chicken Curry",
       "prompt": "Chicken curry with rice",
       "requestedPeople": 4,
+      "noOfGramsOnePersonEats": 100,
       "createdAt": "2025-12-31T10:00:00",
       "recipeId": "uuid"
     }
@@ -101,6 +98,8 @@ This project is a Cooking App API that allows generating recipes based on user i
 }
 ```
 
+---
+
 ### 3. Get Recipe by ID
 
 **GET /{id}**
@@ -108,20 +107,21 @@ This project is a Cooking App API that allows generating recipes based on user i
 **Description:** Retrieves a recipe by its unique ID.
 
 **Path Parameter:**
-
-* `id` - UUID of the recipe
+- `id` - UUID of the recipe
 
 **Response:**
-
 ```json
 {
   "id": "uuid",
   "recipeName": "Chicken Curry",
+  "noOfGramsOnePersonEats": 100,
   "ingredients": [...],
   "instructions": "..."
+  
 }
 ```
 
+---
 
 ## 🔐 Configuration
 
@@ -158,9 +158,10 @@ Application runs at: `http://localhost:8080`
 
 - DTO-based API responses
 - Pagination for large datasets
-- Lazy loading for relationships
+- Lazy loading for JPA relationships
 - UUID identifiers
 - Proper cascade handling
+- Conditional recipe customization
 
 ---
 
@@ -176,4 +177,4 @@ Application runs at: `http://localhost:8080`
 
 ## 👩‍💻 Author
 
-**Lakshika Perera
+**Lakshika Perera**
