@@ -1,6 +1,10 @@
 package com.example.cookingapp.util;
 
 public class Constant {
+
+    private Constant() {
+        // prevent instantiation
+    }
     public static final String PROMPT_STRING = """
             Generate a recipe for %s for %d people.
             Output ONLY valid JSON in this format:

@@ -1,6 +1,7 @@
 package com.example.cookingapp.ai;
 
 import com.example.cookingapp.dto.RecipeDto;
+import com.example.cookingapp.exception.RecipeGenerationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
@@ -54,7 +55,7 @@ public class ChatGPTClient {
                 .map(ResponseOutputText::text)
                 .map(text -> text.replace("```json", "").replace("```", "").trim())// get the actual text
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("No JSON output from OpenAI"));
+                .orElseThrow(() -> new RecipeGenerationException("No JSON output from OpenAI"));
 
         // Map JSON string to RecipeDto
         return objectMapper.readValue(jsonContent, RecipeDto.class);

@@ -40,53 +40,49 @@ public class RecipeService {
 
 
     @Transactional
-    public List<RecipeDto> generateRecipe(int people, String prompt, Integer noOfGramsOnePersonEats, boolean isCustomized) throws Exception {
-        List<RecipeLog> recipeLog = new ArrayList<>();
-        if (!isCustomized)
-            recipeLog = repository
-                    .findAllByPromptAndRequestedPeople(prompt, people);
-        else recipeLog = repository
-                .findAllByPromptAndRequestedPeopleAndNoOfGramsOnePersonEats(prompt, people, noOfGramsOnePersonEats);
+    public List<RecipeDto> generateRecipe(
+            int people,
+            String prompt,
+            Integer noOfGramsOnePersonEats,
+            boolean isCustomized) throws Exception {
 
-        if (recipeLog == null || recipeLog.isEmpty()) {
-            RecipeDto recipeDto = null;
-            recipeDto =
-                    chatGPTClient.getRecipeForPeople(people, prompt, noOfGramsOnePersonEats, isCustomized);
+        // Fetch existing logs using clear branching
+        List<RecipeLog> recipeLogs = isCustomized
+                ? repository.findAllByPromptAndRequestedPeopleAndNoOfGramsOnePersonEats(
+                prompt, people, noOfGramsOnePersonEats)
+                : repository.findAllByPromptAndRequestedPeople(prompt, people);
 
-            Recipe recipe = new Recipe();
-            recipe.setRecipeName(recipeDto.getRecipeName());
-            recipe.setServes(recipeDto.getServes());
-            recipe.setNoOfGramsOnePersonEats(recipeDto.getNoOfGramsOnePersonEats());
-            recipe.setInstructions(recipeDto.getInstructions());
-
-            Recipe finalRecipe = recipe;
-            List<Ingredient> ingredients = recipeDto.getIngredients().stream()
-                    .map(i -> {
-                        Ingredient ing = new Ingredient();
-                        ing.setName(i.getName());
-                        ing.setAmountGrams(i.getAmountGrams());
-                        ing.setRecipe(finalRecipe);
-                        return ing;
-                    }).toList();
-
-            recipe.setIngredients(ingredients);
-            RecipeLog logEntity = new RecipeLog();
-            logEntity.setRecipe(recipe); //  FK set here
-            logEntity.setRecipeName(recipe.getRecipeName());
-            logEntity.setPrompt(prompt);
-            logEntity.setRequestedPeople(people);
-            logEntity.setNoOfGramsOnePersonEats(recipe.getNoOfGramsOnePersonEats());
-            recipe.setRecipeLog(logEntity);
-            recipe = recipeRepository.save(recipe); //  save parent first
-
-            return List.of(recipeDto);
+        // If recipe exists → map and return
+        if (!recipeLogs.isEmpty()) {
+            return recipeLogs.stream()
+                    .map(log -> recipeMapper.toDto(log.getRecipe()))
+                    .toList();
         }
 
-        // Existing log → fetch recipe safely
-        return recipeLog.stream()
-                .map(r -> recipeMapper.toDto(r.getRecipe()))
-                .collect(Collectors.toList());
+        // Call AI only when needed
+        RecipeDto recipeDto =
+                chatGPTClient.getRecipeForPeople(
+                        people, prompt, noOfGramsOnePersonEats, isCustomized);
+
+        // Map DTO → Entity
+        Recipe recipe = mapToRecipeEntity(recipeDto);
+
+        // Create log entry
+        RecipeLog recipeLog = new RecipeLog();
+        recipeLog.setRecipe(recipe);
+        recipeLog.setRecipeName(recipe.getRecipeName());
+        recipeLog.setPrompt(prompt);
+        recipeLog.setRequestedPeople(people);
+        recipeLog.setNoOfGramsOnePersonEats(recipe.getNoOfGramsOnePersonEats());
+
+        recipe.setRecipeLog(recipeLog);
+
+        // Persist aggregate root
+        recipeRepository.save(recipe);
+
+        return List.of(recipeDto);
     }
+
 
     public Page<RecipeLogDto> getAllLogs(Pageable pageable) {
         return  repository.findAll(pageable)
@@ -107,4 +103,26 @@ public class RecipeService {
         return PROMPT_STRING_WITH_CUSTOMIZED
                 .formatted(prompt, people, noOfGramsOnePersonEats);
     }
+
+    private Recipe mapToRecipeEntity(RecipeDto dto) {
+        Recipe recipe = new Recipe();
+        recipe.setRecipeName(dto.getRecipeName());
+        recipe.setServes(dto.getServes());
+        recipe.setNoOfGramsOnePersonEats(dto.getNoOfGramsOnePersonEats());
+        recipe.setInstructions(dto.getInstructions());
+
+        List<Ingredient> ingredients = dto.getIngredients().stream()
+                .map(i -> {
+                    Ingredient ingredient = new Ingredient();
+                    ingredient.setName(i.getName());
+                    ingredient.setAmountGrams(i.getAmountGrams());
+                    ingredient.setRecipe(recipe);
+                    return ingredient;
+                })
+                .toList();
+
+        recipe.setIngredients(ingredients);
+        return recipe;
+    }
+
 }
